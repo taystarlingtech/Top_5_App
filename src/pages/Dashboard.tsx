@@ -1,3 +1,6 @@
+// Read-only view of the selected week. Standings are one row per person.
+// The task grid underneath is the same data, with editing turned off.
+
 import { themeQuartz, type ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useMemo, useState } from "react";
@@ -28,6 +31,7 @@ const standingsTheme = themeQuartz.withParams({
   fontSize: 13,
 });
 
+// Sort ACES, then Alpha, then Awesomes. Week points break ties, highest first.
 const teamRank: Record<Team, number> = { ACES: 0, Alpha: 1, Awesomes: 2 };
 
 const standingColumns: ColDef<Standing>[] = [

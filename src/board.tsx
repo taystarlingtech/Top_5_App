@@ -1,3 +1,6 @@
+// Shared scorecard state. Both pages read the selected week from here.
+// Saves go to localStorage. Supabase is not wired up yet.
+
 import { AgGridReact } from "ag-grid-react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { buildColumns, gridTheme } from "./columns";
@@ -18,6 +21,7 @@ import {
 } from "./weeks";
 
 const STORAGE_KEY = "top5-board-v2";
+// Older builds stored one array of rows, with no week. Read once, then save as v2.
 const LEGACY_KEY = "top5-board-v1";
 
 type Notice = { tone: "ok" | "error"; text: string };
@@ -47,6 +51,7 @@ function isDayRowArray(value: unknown): value is DayRow[] {
   return Array.isArray(value) && value.length > 0 && typeof value[0]?.person === "string";
 }
 
+// Restore v2 if it exists. A selected week in the future is pulled back to this Monday.
 function readSaved(): BoardState | null {
   const current = currentMonday();
   try {
@@ -78,6 +83,7 @@ function readSaved(): BoardState | null {
   }
 }
 
+// Create a blank scorecard the first time someone opens a week that has no rows.
 function ensureWeek(weeks: Record<string, WeekRecord>, weekId: string, fromWeek: string): Record<string, WeekRecord> {
   if (weeks[weekId]) return weeks;
   const roster = rosterFrom(weeks, fromWeek);
@@ -103,6 +109,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(Boolean(saved));
   const [notice, setNotice] = useState<Notice | null>(null);
 
+  // First visit only. A saved board skips the sample so a real import is not overwritten.
   useEffect(() => {
     if (saved) return;
     let cancel = false;
@@ -128,11 +135,13 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     };
   }, [saved]);
 
+  // Persist after the sample (or a save) has loaded. Empty state is not written.
   useEffect(() => {
     if (!ready || Object.keys(weeks).length === 0) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ selectedWeek, weeks }));
   }, [ready, selectedWeek, weeks]);
 
+  // Update one row on the week currently on screen.
   const onPatch = useCallback<GridContext["onPatch"]>(
     (id, patch) => {
       setWeeks((current) => {
@@ -150,6 +159,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     [selectedWeek],
   );
 
+  // Replace the selected week. Other weeks stay as they are.
   const importCsv = useCallback(
     async (file: File) => {
       try {
@@ -169,6 +179,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     [selectedWeek],
   );
 
+  // Sample data always lands on this week, then the view jumps there.
   const loadSample = useCallback(async () => {
     try {
       const weekId = currentMonday();
@@ -192,6 +203,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     setNotice(null);
   }, []);
 
+  // Step back seven days. The first visit to a week copies the roster with blank tasks.
   const goToPreviousWeek = useCallback(() => {
     const previous = addDays(selectedWeek, -7);
     if (!weeks[previous]) {
@@ -204,6 +216,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
     setSelectedWeek(previous);
   }, [selectedWeek, weeks]);
 
+  // Step forward, but never past the Monday of the current calendar week.
   const goToNextWeek = useCallback(() => {
     const today = currentMonday();
     const next = addDays(selectedWeek, 7);
@@ -270,6 +283,7 @@ export function useBoard(): BoardValue {
   return value;
 }
 
+// Attach daily and weekly totals so the grid can show them as ordinary columns.
 export function toGridRows(rows: DayRow[]): GridRow[] {
   const totals = new Map<string, number>();
   for (const row of rows) {
@@ -291,6 +305,7 @@ type ScoreGridProps = {
   quickFilter?: string;
 };
 
+// key={selectedWeek} remounts the grid so a week change cannot leave stale checkboxes.
 export function ScoreGrid({ rows, canEdit, showWeek = false, height, quickFilter }: ScoreGridProps) {
   const { onPatch, selectedWeek } = useBoard();
   const gridRows = useMemo(() => toGridRows(rows), [rows]);

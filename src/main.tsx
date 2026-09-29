@@ -1,3 +1,6 @@
+// App entry. AG Grid Community has to be registered once before any grid renders.
+// BoardProvider loads the saved weeks, and BrowserRouter serves My week and Dashboard.
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

@@ -1,3 +1,6 @@
+// Shell shared by both pages: title, navigation, import, and the week control.
+// The selected week lives in BoardProvider, so My week and Dashboard stay in sync.
+
 import { NavLink, Route, Routes } from "react-router-dom";
 import { useBoard } from "./board";
 import { Dashboard } from "./pages/Dashboard";
@@ -21,6 +24,7 @@ export function App() {
 
   return (
     <div className="app">
+      {/* Title, the two pages, and the buttons that replace the selected week's rows. */}
       <header className="topbar">
         <div className="brand">
           <strong>Top 5</strong>
@@ -50,6 +54,7 @@ export function App() {
           </label>
         </div>
       </header>
+      {/* Both pages read this week. Next week cannot move past the current Monday. */}
       <div className="week-switcher">
         <button type="button" onClick={goToPreviousWeek}>
           Previous week
@@ -77,6 +82,7 @@ export function App() {
         Daily points are 15 for Top 5, 5 for Exercise, and 5 for Reading. A full day is 25, and a full week is 125.
         The priority checkboxes mark tasks done. They do not add points.
       </p>
+      {/* My week edits one person. Dashboard is the same week, read only. */}
       <Routes>
         <Route path="/" element={<MyWeek />} />
         <Route path="/dashboard" element={<Dashboard />} />

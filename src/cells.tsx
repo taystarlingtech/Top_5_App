@@ -1,3 +1,6 @@
+// Cells drawn inside AG Grid. The grid does not own the checkbox state.
+// Each change calls onPatch, and the board writes it onto the selected week.
+
 import type { CustomCellRendererProps } from "ag-grid-react";
 import { useEffect, useState } from "react";
 import type { GridRow } from "./types";
@@ -14,6 +17,8 @@ export type GridContext = {
 
 type TaskCellProps = CustomCellRendererProps<GridRow, string, GridContext> & TaskFields;
 
+// One priority column: a done checkbox plus the task label.
+// The label is saved on blur so typing does not rebuild the grid on every keystroke.
 export function TaskCell({ data, context, doneField, labelField }: TaskCellProps) {
   const label = data?.[labelField] ?? "";
   const done = Boolean(data?.[doneField]);
@@ -53,6 +58,7 @@ export function TaskCell({ data, context, doneField, labelField }: TaskCellProps
 
 type BoolCellProps = CustomCellRendererProps<GridRow, boolean, GridContext>;
 
+// Top 5, Exercise, and Reading. Disabled on the dashboard, where canEdit is false.
 export function BoolCell({ data, value, context, colDef }: BoolCellProps) {
   if (!data || !colDef?.field) return null;
   const field = colDef.field as "top5" | "exercise" | "reading";

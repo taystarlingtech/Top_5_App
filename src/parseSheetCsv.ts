@@ -1,8 +1,14 @@
+// Reads a Google Sheets CSV export of the scorecard tab.
+// Group banners (ACES, ALPHIAS, AWESOMES) must be the only text in their row.
+// Each priority is a checkbox column followed by a text column.
+// Daily and weekly totals in the file are ignored and recalculated.
+
 import { DAY_NAMES, personKey } from "./points";
 import type { DayRow, Team } from "./types";
 
 type Pair = { check: number; label: number };
 
+// Small CSV parser. Handles quoted commas and "" escapes. Strips a leading Excel BOM.
 function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -49,6 +55,7 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
+// Sheet banners are not spelled the same way every time. ALPHIAS is Team Alpha.
 function normalizeTeam(value: string): Team | null {
   const name = value.trim().toLowerCase();
   if (name === "ace" || name === "aces") return "ACES";
@@ -57,6 +64,7 @@ function normalizeTeam(value: string): Team | null {
   return null;
 }
 
+// Google Sheets exports a checked box as TRUE.
 function isChecked(value: string | undefined): boolean {
   const normalized = (value ?? "").trim().toLowerCase();
   return normalized === "true" || normalized === "yes" || normalized === "y" || normalized === "1";
@@ -73,12 +81,15 @@ function slug(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+// A group banner is one cell, such as "ACES", with the rest of the row empty.
 function isSectionRow(cells: string[]): Team | null {
   const filled = cells.map((cell) => cell.trim()).filter(Boolean);
   if (filled.length !== 1) return null;
   return normalizeTeam(filled[0]);
 }
 
+// Merged headers put the title on the checkbox column and leave the text column blank.
+// Collect up to five checkbox/label pairs before Notes or Top 5.
 function findPriorityPairs(headers: string[], start: number, end: number): Pair[] {
   const pairs: Pair[] = [];
   let index = start;
@@ -105,6 +116,8 @@ function findPriorityPairs(headers: string[], start: number, end: number): Pair[
   return pairs;
 }
 
+// The sheet sometimes puts Top 5 / Exercise / Reading on the row under the main header.
+// Fold that second header row in when it is not already a data row.
 function combineHeader(table: string[][], headerIndex: number): { headers: string[]; dataStart: number } {
   const headers = table[headerIndex].map((cell) => cell.trim());
   const next = table[headerIndex + 1];
@@ -125,6 +138,8 @@ function cell(row: string[], index: number): string {
   return (row[index] ?? "").trim();
 }
 
+// Walk data rows. A banner changes the current group. A blank name repeats the person
+// above it, which is how merged name cells export. The first five rows become Mon–Fri.
 export function parseSheetCsv(text: string): DayRow[] {
   const table = parseCsv(text).filter((row) => row.some((value) => value.trim() !== ""));
   const headerIndex = table.findIndex((row) => row.some((cell) => /top priority/i.test(cell)));
@@ -227,6 +242,7 @@ export function parseSheetCsv(text: string): DayRow[] {
   return rows;
 }
 
+// Short status line after a successful import, such as "sheet.csv: 50 days for 10 people."
 export function importSummary(rows: DayRow[], fileName?: string): string {
   const people = new Set(rows.map((row) => personKey(row))).size;
   const file = fileName ? `${fileName}: ` : "";

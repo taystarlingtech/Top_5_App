@@ -1,3 +1,5 @@
+/* Page chrome, week switcher, and the task-cell layout inside AG Grid. */
+
 :root {
   color: #1c1917;
   background: #f6f1ea;
@@ -25,6 +27,7 @@ input {
   flex-direction: column;
 }
 
+/* Title bar, page links, and the import buttons. */
 .topbar {
   display: flex;
   align-items: center;
@@ -117,6 +120,7 @@ select,
   font-size: 13px;
 }
 
+/* Previous week, the week menu, and next week. */
 .week-switcher {
   display: flex;
   align-items: center;
@@ -203,6 +207,7 @@ button:disabled {
   min-width: 220px;
 }
 
+/* AG Grid needs an explicit height. Standings size themselves to the number of people. */
 .grid-wrap {
   height: 560px;
   min-height: 280px;
@@ -215,6 +220,7 @@ button:disabled {
   min-height: 0;
 }
 
+/* Checkbox and label sitting on one line inside a grid cell. */
 .task-cell,
 .bool-cell {
   display: flex;

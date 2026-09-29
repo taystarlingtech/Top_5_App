@@ -1,3 +1,6 @@
+// Column layout for the task grid. Group, person, and day stay pinned
+// so the scoring checkboxes remain reachable while scrolling sideways.
+
 import { themeQuartz, type ColDef } from "ag-grid-community";
 import { BoolCell, TaskCell } from "./cells";
 import type { GridRow, Team } from "./types";
@@ -22,6 +25,7 @@ const teamColor: Record<Team, string> = {
   Awesomes: "#9f1239",
 };
 
+// The value joins done + label so AG Grid refreshes the cell when either one changes.
 function taskColumn(
   headerName: string,
   doneField: "topDone" | "highDone" | "med1Done" | "med2Done" | "lowDone",
@@ -55,6 +59,8 @@ function scoreColumn(field: "top5" | "exercise" | "reading", headerName: string)
   };
 }
 
+// showWeek is on for the dashboard detail grid and off for My week,
+// where the big total already sits above the grid.
 export function buildColumns(showWeek: boolean): ColDef<GridRow>[] {
   const columns: ColDef<GridRow>[] = [
     {

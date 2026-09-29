@@ -1,3 +1,4 @@
+// Editable scorecard for one person. Sign-in does not exist yet, so the menu picks who.
 import { useMemo, useState } from "react";
 import { ScoreGrid, useBoard } from "../board";
 import { MAX_WEEK_POINTS, weekPoints } from "../points";
